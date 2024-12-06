@@ -40,7 +40,8 @@ $define CONTENT_LENGTH "Content-Length: "
 class JRPC_Message(msg, kind, json_table)
 
    method parse_json(s)
-      msg := s
+      #s:=replace(s, "/c%3A/", "/C:/")
+      msg:=s
       if json_table := jtou(s) then {
          guess_kind()
          return self
@@ -70,11 +71,15 @@ class JRPC_Message(msg, kind, json_table)
       return json_table["method"]
    end
    method get_params()
-      return json_table["params"]
+      temp :=json_table["params"]
+      #temp:=replace(temp, "/c%3A/", "/C:/")
+      return temp
    end
    # many requests operate on a file, stored in uri param
    method get_param_uri()
-      return json_table["params"]["textDocument"]["uri"]
+   #temp:=json_table["params"]["textDocument"]["uri"]
+   #temp:=replace(temp, "/c%3A/", "/C:/")
+    return json_table["params"]["textDocument"]["uri"] 
    end
 
    method get_result()
@@ -250,6 +255,9 @@ class JRPC_HTTPSocket(sock)
    method send_msg(msg)
       local data
       data := msg.get_content()
+
+      data := replace(data, "c:/", "/c%3A/") # Decode for windows paths
+
       writes(sock, CONTENT_LENGTH, *data, "\r\n\r\n", data)
    end
 

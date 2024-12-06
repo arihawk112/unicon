@@ -586,7 +586,7 @@ class Workspace(
    method getContext(lineNum, charNum)
       if (/context | (context.isNewContext(lineNum, charNum))) then {
          context := Context(temp_idoc, uri, lineNum, charNum)
-      }
+      }  
       return context
    end
 
@@ -769,6 +769,10 @@ class Context(uniAll, uri, line, lineNum, charNum, objectName, methodName, conte
    initially(uniAll, uri, lineNum, charNum)
       self.uniAll := uniAll
       self.uri := uri
+      #self.uri := replace(self.uri, "c:/", "C:/")#when I edit the URI here, hover stops working again
+      #write(self.uri)
+      #write("self.uri test")
+
       self.lineNum := lineNum
       self.charNum := charNum
       line := getDesiredLine(lineNum)
@@ -912,6 +916,8 @@ procedure makeComment(_function)
    fullComment := replace(fullComment, "\"", "\\\"")
    fullComment := replace(fullComment, "<[", "")
    fullComment := replace(fullComment, "]>", "")
-
+   #NEED TO EDIT THIS TO ACCOUNT FOR ALL DIRECTORY FORMATS
+   
+   fullComment := replace(fullComment, "c:/", "C:/")
    return fullComment
 end

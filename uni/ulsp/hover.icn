@@ -47,13 +47,12 @@ class HoverHandler(
       else {
          results_table["contents"] := table("kind", "markdown", "value", "(_" || _context || "_) " || hover_item )
       }
-
       return results_table
    end
 
    method getContext(context)
       local line_num, procedure_name, method_name, class_name, single_quote, double_quote, ch, _item, c, desired_line,
-      num_params, param, num_attributes, _attribute, line, character
+      num_params, param, num_attributes, _attribute, line, character, begins, ends #ADDED BEGINS ADDED ENDS
 
       line := context.line
       \line | fail
@@ -245,8 +244,12 @@ class HoverHandler(
          }
 
          if &pos ~= 1 then move(1)
-
-         return tab(many(identifiers))
+         begins := &pos                #
+         b := tab(many(identifiers))#
+         ends := &pos#
+ 
+         return b #the name of the hovered item
+         #return tab(many(identifiers))
       }
    end
 end

@@ -29,14 +29,18 @@ class Server(
 
    method handle_request(msg)
       local meth, params, id
+
+
       meth := msg.get_method()
       params := msg.get_params()
       id := msg.get_id()
       #params:=replace(params, "/c%3A/", "/C:/")
+
       #writing params here causes loop crash
       Logger.info("jrpc:request: ", meth, " id=", id)
       Logger.debug5_kind("jrpc:request:params ", ximage(params))
       #msg:=replace(msg, "/c%3A/", "/C:/")
+
 
       meth ?
          if ="$/" then {
@@ -75,8 +79,6 @@ class Server(
          "textDocument/didOpen" : didOpen(params)
          "textDocument/didClose" : didClose(params)
          "textDocument/didChange" : didChange(params)
-         "textDocument/didSave" : didSave(params)
-
          default:
             Logger.debug1_kind("jrpc:notification:unsupported", msg.get_method())
       }
@@ -156,9 +158,7 @@ class Server(
             close(f)
          }
       }
-      if &features == ("MS Windows NT") then {
-      fname := fname[2] || ":" || fname[6:0]
-      }
+
       openFiles[\uri] := Workspace(fname, lsp_database)
       workspace_object := openFiles[\uri]
       workspace_object.setFile()
@@ -175,47 +175,6 @@ class Server(
       uri := request_params["textDocument"]["uri"]
       delete(openFiles, \uri)
    end
-
-
-########################################################
-#                textDocument/didSave                #
-########################################################
-#backwards slashing opening the files, not forward
-#before sending message back, translate back to etf8 forward 
-
-    method didSave(request_params)
-      local fname, uri, workspace_object
-      if \(uri := request_params["textDocument"]["uri"]) then {# get URI
-         uri ? {         # parse the file path from the URI
-            ="file://" | write(&errout, "Unexpected URI format: ", uri)
-            fname := tab(0)
-         }
-         fname := replace(fname, "/c%3A/", "C:/") # Decode for windows paths
-         write("Decoded file path: ", fname)      # Debugging output
-
-         if not system("test -f '" || fname || "'")#if file does not exist/cant be found
-          then
-           {
-            write("Error: File does not exist: ", fname)
-            return
-         }
-         if open(fname) then      # attempt to open the file again
-         {
-            write("File saved successfully!")
-            write("File URI: ", uri)
-            write("File Path: ", fname)
-         } else 
-         {
-            write("Error: Unable to open the file: ", fname)
-         }
-      } 
-      else 
-      {
-         write("Error: Missing or invalid URI in didSave request.")
-      }
-   end
-
-
 
 ########################################################
 #                textDocument/didChange                #
@@ -266,8 +225,6 @@ class Server(
       signatureHandler.setVariables(workspace_object, msg.get_params())
       result := signatureHandler.run()
       msg.make_result_response(result)
-      #result := replace(result, "c:/", "/c%3A/") # Decode for windows paths
-
       jrpc_handler.send_msg(msg)
    end
 
@@ -276,15 +233,15 @@ class Server(
 ########################################################
 
    method hoverHelp(msg)
+
+      #local test := msg.get_content()
       local workspace_object, result
-      workspace_object := openFiles[\msg.get_param_uri()]   
-      
+      #write(test)
+      workspace_object := openFiles[\msg.get_param_uri()]
+
       hoverHandler.setVariables(workspace_object, msg.get_params())
       result := hoverHandler.run()
-      #result := replace(result, "c:/", "/c%3A/") # Decode for windows paths
-
       msg.make_result_response(result)
-
       jrpc_handler.send_msg(msg)
    end
 
@@ -297,8 +254,6 @@ class Server(
       workspace_object := openFiles[\msg.get_param_uri()]
       definitionHandler.setVariables(workspace_object, msg.get_params())
       result := definitionHandler.run()
-      #result := replace(result, "c:/", "/c%3A/") # Decode for windows paths
-
       msg.make_result_response(result)
       jrpc_handler.send_msg(msg)
    end
